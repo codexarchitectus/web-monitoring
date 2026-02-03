@@ -1,7 +1,5 @@
 from datetime import datetime
 
-import pytest
-
 from web_monitor.models import CheckResult
 
 

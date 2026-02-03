@@ -1,8 +1,6 @@
 from datetime import datetime
 from unittest.mock import patch
 
-import pytest
-
 from web_monitor.models import CheckResult, SiteStatus
 from web_monitor.notifier import _build_down_email, _build_recovery_email, send_down_email
 
