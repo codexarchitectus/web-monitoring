@@ -8,6 +8,7 @@ class GlobalConfig(BaseModel):
     timeout_seconds: int = 10
     db_path: str = "/var/lib/web-monitor/checks.db"
     log_level: str = "INFO"
+    confirm_down_after: int = 1
 
 
 class EmailConfig(BaseModel):
