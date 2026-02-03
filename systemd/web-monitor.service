@@ -1,0 +1,31 @@
+[Unit]
+Description=Web Monitoring Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/web-monitor -c /etc/web-monitor/config.yaml
+Restart=always
+RestartSec=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=web-monitor
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/web-monitor
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+# Environment
+EnvironmentFile=-/etc/web-monitor/env
+
+[Install]
+WantedBy=multi-user.target

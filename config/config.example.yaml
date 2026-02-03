@@ -1,0 +1,25 @@
+global:
+  check_interval_seconds: 60
+  timeout_seconds: 10
+  db_path: "/var/lib/web-monitor/checks.db"
+  log_level: "INFO"
+
+email:
+  smtp_host: "smtp.example.com"
+  smtp_port: 587
+  smtp_user: "alerts@example.com"
+  smtp_password: "${SMTP_PASSWORD}"
+  use_tls: true
+  from_address: "alerts@example.com"
+  to_addresses:
+    - "oncall@example.com"
+
+sites:
+  - name: "production-app"
+    url: "https://app.example.com/health"
+    check_interval_seconds: 30
+    expected_status: 200
+
+  - name: "docs-site"
+    url: "https://docs.example.com"
+    expected_status: 200
