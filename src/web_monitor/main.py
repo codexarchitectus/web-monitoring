@@ -20,6 +20,7 @@ class Monitor:
         self.db = Database(config.global_.db_path)
         self._running = True
         self._next_run: dict[str, datetime] = {}
+        self._failure_counts: dict[str, int] = {}
 
     async def run(self) -> None:
         await self.db.init()
@@ -57,21 +58,34 @@ class Monitor:
                 continue
 
             previous = await self.db.get_site_status(site.name)
-            state_changed = previous is not None and previous.is_up != result.is_up
+            threshold = self.config.global_.confirm_down_after
+            state_changed = False
 
-            if state_changed:
-                if result.is_up:
+            if result.is_up:
+                self._failure_counts[site.name] = 0
+                if previous is not None and not previous.is_up:
+                    state_changed = True
                     logger.info("RECOVERED: %s is back up", site.name)
                     await send_recovery_email(site, result, previous, self.config)
-                else:
+                elif previous is None:
+                    logger.info("Initial check for %s: UP", site.name)
+            else:
+                self._failure_counts[site.name] = (
+                    self._failure_counts.get(site.name, 0) + 1
+                )
+                if previous is None:
+                    logger.info("Initial check for %s: DOWN", site.name)
+                elif (
+                    previous.is_up
+                    and self._failure_counts[site.name] >= threshold
+                ):
+                    state_changed = True
                     logger.warning("DOWN: %s is unreachable", site.name)
                     await send_down_email(site, result, previous, self.config)
-            elif previous is None:
-                status = "UP" if result.is_up else "DOWN"
-                logger.info("Initial check for %s: %s", site.name, status)
 
             await self.db.save_check(result)
-            await self.db.update_site_status(result, state_changed)
+            if result.is_up or state_changed or previous is None:
+                await self.db.update_site_status(result, state_changed)
 
             interval = site.check_interval_seconds or self.config.global_.check_interval_seconds
             self._next_run[site.name] = datetime.now(UTC) + timedelta(seconds=interval)

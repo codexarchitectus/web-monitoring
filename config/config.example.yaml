@@ -3,6 +3,7 @@ global:
   timeout_seconds: 10
   db_path: "/var/lib/web-monitor/checks.db"
   log_level: "INFO"
+  confirm_down_after: 3
 
 email:
   smtp_host: "smtp.example.com"
