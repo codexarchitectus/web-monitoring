@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import smtplib
+import ssl
 from email.message import EmailMessage
 
 from web_monitor.models import AppConfig, CheckResult, SiteConfig, SiteStatus
@@ -70,15 +71,14 @@ def _build_recovery_email(
 def _send_email(msg: EmailMessage, config: AppConfig) -> None:
     email_cfg = config.email
     try:
-        if email_cfg.use_tls:
-            with smtplib.SMTP(email_cfg.smtp_host, email_cfg.smtp_port) as server:
-                server.starttls()
-                server.login(email_cfg.smtp_user, email_cfg.smtp_password)
-                server.send_message(msg)
-        else:
-            with smtplib.SMTP(email_cfg.smtp_host, email_cfg.smtp_port) as server:
-                server.login(email_cfg.smtp_user, email_cfg.smtp_password)
-                server.send_message(msg)
+        if not email_cfg.use_tls:
+            logger.warning("TLS is disabled — SMTP credentials will be sent in plaintext")
+        with smtplib.SMTP(email_cfg.smtp_host, email_cfg.smtp_port) as server:
+            if email_cfg.use_tls:
+                context = ssl.create_default_context()
+                server.starttls(context=context)
+            server.login(email_cfg.smtp_user, email_cfg.smtp_password)
+            server.send_message(msg)
         logger.info("Sent email: %s", msg["Subject"])
     except Exception:
         logger.exception("Failed to send email: %s", msg["Subject"])
