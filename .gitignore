@@ -6,3 +6,8 @@ dist/
 build/
 *.pyc
 .env
+.env.*
+*.db
+.claude/
+config/*.yaml
+!config/config.example.yaml
