@@ -12,6 +12,15 @@ Async Python service that periodically checks website availability, tracks up/do
 
 ### From source
 
+Install Python 3.11+, pip, git, and venv if not already present:
+
+```bash
+# Debian/Ubuntu
+sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
+```
+
+Clone and install:
+
 ```bash
 git clone <repo-url> web-monitoring
 cd web-monitoring
@@ -73,6 +82,7 @@ global:
   timeout_seconds: 10
   db_path: "/var/lib/web-monitor/checks.db"
   log_level: "INFO"
+  confirm_down_after: 3
 
 email:
   smtp_host: "smtp.example.com"
@@ -102,6 +112,7 @@ sites:
 | `timeout_seconds` | `10` | HTTP request timeout |
 | `db_path` | `/var/lib/web-monitor/checks.db` | Path to the SQLite database |
 | `log_level` | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `confirm_down_after` | `1` | Number of consecutive failed checks before sending a down alert |
 
 ### Email settings
 
@@ -176,6 +187,10 @@ This site was DOWN since 2026-02-03T12:00:00 UTC.
 ```
 
 No email is sent on the first check (initial state is recorded silently) or when the state stays the same between checks.
+
+### Consecutive failure threshold
+
+When `confirm_down_after` is set to a value greater than 1, the site must fail that many consecutive checks before a down alert is sent. This avoids false alerts from transient failures. Recovery emails are always sent immediately on the first successful check after a confirmed outage. The failure counter resets whenever a check succeeds and is not persisted across service restarts.
 
 ## Troubleshooting
 
